@@ -11,7 +11,7 @@ const mongoose = require('mongoose');
  */
 function mongooseErrorHandler(err, req, res, next) {
 
-  // ValidationError → 422
+  
   if (err.name === 'ValidationError') {
     const fields = {};
 
