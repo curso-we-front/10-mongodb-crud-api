@@ -1,21 +1,14 @@
-const express = require('express');
+const express = require("express");
 const app = express();
+const articlesRouter = require("./routes/articles");
+const mongooseErrorHandler = require("./middlewares/mongooseErrorHandler");
+const errorHandler = require("./middlewares/errorHandler");
 
 app.use(express.json());
 
-// TODO: importar el router de artículos
-// const articlesRouter = require('./routes/articles');
+app.use("/articles", articlesRouter);
 
-// TODO: montar el router en /articles
-// app.use('/articles', articlesRouter);
-
-// TODO: importar y usar mongooseErrorHandler antes de errorHandler
-// const mongooseErrorHandler = require('./middlewares/mongooseErrorHandler');
-
-// TODO: importar y usar errorHandler
-// const errorHandler = require('./middlewares/errorHandler');
-
-// app.use(mongooseErrorHandler);
-// app.use(errorHandler);
+app.use(mongooseErrorHandler);
+app.use(errorHandler);
 
 module.exports = app;
