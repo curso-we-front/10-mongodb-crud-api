@@ -11,77 +11,26 @@ const Article = require("../models/Article");
  * Query params: tag, search, page (default 1), limit (default 10)
  * Respuesta: { data, total, page, limit, totalPages }
  */
-// const DEFAULT_PAGE = 1;
-// const LIMIT_PAGE = 10;
-
-// async function getArticles(req, res, next) {
-//   try {
-//     // TODO
-//     const { tag, search } = req.query;
-//     console.log(req.query);
-    
-//     const page = (req.query.page || DEFAULT_PAGE -1) * LIMIT_PAGE
-
-//     const publishedArticles = Article.find({ published: true }).skip(page).limit(LIMIT_PAGE);
-//     const total = publishedArticles.countDocuments({})
-//     const totalPages = Math.ceil(total/LIMIT_PAGE)
-//     return req.status(200).json({publishedArticles, total, page, LIMIT_PAGE, totalPages})
-//   } catch (err) {
-//     next(err);
-//   }
-// }
 const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 10;
-const MAX_LIMIT = 50;
-const MAX_SEARCH_LENGTH = 50;
+const LIMIT_PAGE = 10;
 
 async function getArticles(req, res, next) {
   try {
+    // TODO
     const { tag, search } = req.query;
+    console.log(req.query);
+    
+    const page = (req.query.page || DEFAULT_PAGE -1) * LIMIT_PAGE
 
-    const page = Math.max(
-      DEFAULT_PAGE,
-      parseInt(req.query.page) || DEFAULT_PAGE,
-    );
-    const limit = Math.max(
-      1,
-      Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT),
-    );
-
-    const filter = { published: true };
-
-    if (tag) filter.tags = tag;
-
-    if (search) {
-      if (search.length > MAX_SEARCH_LENGTH) {
-        return res.status(400).json({ error: "Search demasiado largo" });
-      }
-
-      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-      filter.$or = [
-        { title: { $regex: safeSearch, $options: "i" } },
-        { content: { $regex: safeSearch, $options: "i" } },
-      ];
-    }
-
-    const total = await Article.countDocuments(filter);
-
-    const data = await Article.find(filter)
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    res.json({
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    });
+    const publishedArticles = Article.find({ published: true }).skip(page).limit(LIMIT_PAGE);
+    const total = publishedArticles.countDocuments({})
+    const totalPages = Math.ceil(total/LIMIT_PAGE)
+    return req.status(200).json({publishedArticles, total, page, LIMIT_PAGE, totalPages})
   } catch (err) {
     next(err);
   }
 }
+
 /**
  * GET /articles/:id
  * Devuelve un artículo por su _id de MongoDB.
