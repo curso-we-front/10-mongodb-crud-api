@@ -11,6 +11,34 @@ const mongoose = require('mongoose');
  */
 function mongooseErrorHandler(err, req, res, next) {
   // TODO
+  if (err instanceof mongoose.Error.ValidationError) {
+    const fields = {};
+
+    for (const field in err.errors) {
+      fields[field] = err.errors[field].message;
+    }
+
+    return res.status(422).json({
+      error: 'Error de validación',
+      fields
+    });
+  }
+
+  if (err instanceof mongoose.Error.CastError) {
+    return res.status(400).json({
+      error: 'ID inválido'
+    });
+  }
+
+  if (err.name === 'MongoServerError' && err.code === 11000) {
+    return res.status(409).json({
+      error: 'Ya existe un documento con ese valor'
+    });
+  }
+
+  // Otros errores
+  next(err);
+  
 }
 
 module.exports = mongooseErrorHandler;

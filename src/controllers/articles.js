@@ -18,14 +18,27 @@ async function getArticles(req, res, next) {
   try {
     // TODO
     const { tag, search } = req.query;
-    console.log(req.query);
-    
-    const page = (req.query.page || DEFAULT_PAGE -1) * LIMIT_PAGE
+    const limit = parseInt(req.query.limit) || LIMIT_PAGE;
+    const page = parseInt(req.query.page) || DEFAULT_PAGE;
 
-    const publishedArticles = Article.find({ published: true }).skip(page).limit(LIMIT_PAGE);
-    const total = publishedArticles.countDocuments({})
-    const totalPages = Math.ceil(total/LIMIT_PAGE)
-    return req.status(200).json({publishedArticles, total, page, LIMIT_PAGE, totalPages})
+    let filter = { published: true };
+    if (tag) {
+      filter.tags = tag;
+    }
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const data = await Article.find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const total = parseInt(await Article.countDocuments({}));
+    const totalPages = Math.ceil(total / LIMIT_PAGE);
+
+    return res.status(200).json({ data, total, page, limit, totalPages });
   } catch (err) {
     next(err);
   }
@@ -39,7 +52,14 @@ async function getArticles(req, res, next) {
 async function getArticleById(req, res, next) {
   try {
     // TODO
+    const id = req.params.id;
+    const article = await Article.findById(id);
+    if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    return res.status(200).json(article);
   } catch (err) {
+    return res.status(400).json({ error: "Invalid id" });
     next(err);
   }
 }
@@ -51,6 +71,23 @@ async function getArticleById(req, res, next) {
 async function createArticle(req, res, next) {
   try {
     // TODO
+    if (!req.body.title || !req.body.content || !req.body.author) {
+      let fields = [];
+      if (!req.body.title) {
+        fields.push("title");
+      }
+      if (!req.body.content) {
+        fields.push("content");
+      }
+      if (!req.body.author) {
+        fields.push("author");
+      }
+      return res
+        .status(422)
+        .json({ error: "Required fields are missing", fields });
+    }
+    const article = await Article.create(req.body);
+    res.status(201).json(article);
   } catch (err) {
     next(err);
   }
@@ -64,7 +101,23 @@ async function createArticle(req, res, next) {
 async function replaceArticle(req, res, next) {
   try {
     // TODO
+    const id = req.params.id;
+
+    if (!id) {
+      return res.status(400).json({ error: "Invalid id" });
+    }
+    const article = await Article.findOneAndReplace({ _id: id }, req.body, {
+      new: true,
+      overwrite: true,
+      runValidators: true,
+    });
+
+    if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    return res.status(200).json(article);
   } catch (err) {
+    return res.status(400).json({ error: "Invalid id" });
     next(err);
   }
 }
@@ -77,7 +130,17 @@ async function replaceArticle(req, res, next) {
 async function updateArticle(req, res, next) {
   try {
     // TODO
+    const id = req.params.id;
+    const article = await Article.findByIdAndUpdate({ _id: id }, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!article) {
+      
+    }
+    return res.status(200).json(article);
   } catch (err) {
+    return res.status(400).json({ error: "Invalid id" });
     next(err);
   }
 }
@@ -89,7 +152,14 @@ async function updateArticle(req, res, next) {
 async function deleteArticle(req, res, next) {
   try {
     // TODO
+    const id = req.params.id
+    const article = await Article.findByIdAndDelete({_id: id})
+    if(!article){
+      return res.status(404).json({ error: "Article not found" });
+    }
+    return res.status(204).send()
   } catch (err) {
+     return res.status(400).json({ error: "Invalid id" });
     next(err);
   }
 }
