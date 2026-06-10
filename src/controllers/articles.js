@@ -19,9 +19,9 @@ async function getArticles(req, res, next) {
     // TODO
     const { tag, search } = req.query;
     const limit = parseInt(req.query.limit) || LIMIT_PAGE;
-    const page = parseInt(req.query.page) || DEFAULT_PAGE;
+    const page = (parseInt(req.query.page) || DEFAULT_PAGE);
 
-    let filter = { published: true };
+    const filter = { published: true };
     if (tag) {
       filter.tags = tag;
     }
@@ -52,7 +52,7 @@ async function getArticles(req, res, next) {
 async function getArticleById(req, res, next) {
   try {
     // TODO
-    const id = req.params.id;
+    const {id} = req.params;
     const article = await Article.findById(id);
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
@@ -101,7 +101,7 @@ async function createArticle(req, res, next) {
 async function replaceArticle(req, res, next) {
   try {
     // TODO
-    const id = req.params.id;
+    const {id} = req.params;
 
     if (!id) {
       return res.status(400).json({ error: "Invalid id" });
@@ -130,13 +130,13 @@ async function replaceArticle(req, res, next) {
 async function updateArticle(req, res, next) {
   try {
     // TODO
-    const id = req.params.id;
+    const {id} = req.params;
     const article = await Article.findByIdAndUpdate({ _id: id }, req.body, {
       new: true,
       runValidators: true,
     });
     if (!article) {
-      
+      return res.status(404).json({ error: "Article not found" });
     }
     return res.status(200).json(article);
   } catch (err) {
@@ -152,7 +152,7 @@ async function updateArticle(req, res, next) {
 async function deleteArticle(req, res, next) {
   try {
     // TODO
-    const id = req.params.id
+    const {id} = req.params;
     const article = await Article.findByIdAndDelete({_id: id})
     if(!article){
       return res.status(404).json({ error: "Article not found" });

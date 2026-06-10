@@ -9,6 +9,9 @@ const mongoose = require('mongoose');
  * - MongoServerError (code 11000) → 409 { error: 'Ya existe un documento con ese valor' }
  * - Otros               → pasa al siguiente errorHandler con next(err)
  */
+
+const MONGO_ERROR_DOCUMENT_EXIST = 11000
+
 function mongooseErrorHandler(err, req, res, next) {
   // TODO
   if (err instanceof mongoose.Error.ValidationError) {
@@ -30,13 +33,12 @@ function mongooseErrorHandler(err, req, res, next) {
     });
   }
 
-  if (err.name === 'MongoServerError' && err.code === 11000) {
+  if (err.name === 'MongoServerError' && err.code === MONGO_ERROR_DOCUMENT_EXIST) {
     return res.status(409).json({
       error: 'Ya existe un documento con ese valor'
     });
   }
 
-  // Otros errores
   next(err);
   
 }
